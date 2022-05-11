@@ -4,7 +4,7 @@ USE Market;
 
 DROP TABLE IF EXISTS Customer;
 CREATE TABLE IF NOT EXISTS Customer(
-    custId VARCHAR (6),
+    custId VARCHAR (7),
     custName VARCHAR (30) NOT NULL DEFAULT 'unknown',
     custSalary DECIMAL (6,2) DEFAULT 0.00,
     custAddress VARCHAR (100),
@@ -16,7 +16,7 @@ DESC Customer;
 #--------------------------------------------------------
 DROP TABLE IF EXISTS Item;
 CREATE TABLE IF NOT EXISTS Item(
-    itemId VARCHAR (6),
+    itemId VARCHAR (7),
     itemName VARCHAR (50),
     unitPrice DECIMAL (6,2) DEFAULT 0.00,
     qty INT DEFAULT 0,
@@ -29,9 +29,9 @@ DESC Item;
 
 DROP TABLE IF EXISTS Orders;
 CREATE TABLE IF NOT EXISTS Orders(
-    orderId VARCHAR (6),
+    orderId VARCHAR (7),
     date DATE,
-    custId VARCHAR (6),
+    custId VARCHAR (7),
     cost DECIMAL (10,2) DEFAULT 0.00,
     CONSTRAINT PRIMARY KEY (orderId),
     CONSTRAINT FOREIGN KEY (custId) REFERENCES Customer(custId) ON DELETE CASCADE ON UPDATE CASCADE
@@ -43,8 +43,8 @@ DESC Orders;
 
 DROP TABLE IF EXISTS OrderDetail;
 CREATE TABLE IF NOT EXISTS OrderDetail(
-    orderId VARCHAR (6),
-    itemId VARCHAR (6),
+    orderId VARCHAR (7),
+    itemId VARCHAR (7),
     qty INT,
     price DECIMAL (10,2) DEFAULT 0.00,
     discount DECIMAL (10,2) DEFAULT 0.00,

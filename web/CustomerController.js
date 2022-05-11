@@ -1,3 +1,4 @@
+loadAllCustomer();
 
 //START CUSTOMER VALIDATION
 var regExCusID = /^(C00-)[0-9]{3,4}$/;
@@ -184,52 +185,16 @@ $("#btnCustomerSave").click(function () {
 
     saveCustomer();
     clearAll();
-    loadAllCustomer();
-    loadAllCustomerIds();
+    // loadAllCustomerIds();
 
-    $("#customerTable>tr").off("click");
-
-    $("#customerTable>tr").click(function () {
-
-        let cusId = $(this).children(":eq(0)").text();
-        let cusName = $(this).children(":eq(1)").text();
-        let cusAddress = $(this).children(":eq(2)").text();
-        let cusSalary = $(this).children(":eq(3)").text();
-
-        $("#customerId").val(cusId)
-        $("#customerName").val(cusName)
-        $("#customerSalary").val(cusSalary)
-        $("#customerAddress").val(cusAddress)
-    });
 });
 
 $("#btnCustomerSearch").click(function () {
-    var searchID = $("#txtCustomerSearch").val();
 
-    var response = searchCustomer(searchID);
-    if (response) {
-        $("#customerId").val(response.getCustomerId());
-        $("#customerName").val(response.getCustomerName());
-        $("#customerAddress").val(response.getCustomerAddress());
-        $("#customerSalary").val(response.getCustomerSalary());
-
-        $('#customerName,#customerSalary,#customerAddress').prop('disabled', false);
-        $("#btnCustomerDelete").prop('disabled', false);
-    } else {
-        clearAll();
-        alert("No such a Customer")
-    }
 });
 
 $("#btnCustomerDelete").click(function () {
-    var cusId = $("#customerId").val();
-    var response = searchCustomer(cusId);
 
-    let index = customerDB.indexOf(response);
-    let res = confirm("Do you really need to delete this customer ?");
-    if (res) {
-        deleteCustomer(index);
-    }
 });
 
 $("#btnCustomerUpdate").click(function () {
@@ -239,43 +204,39 @@ $("#btnCustomerUpdate").click(function () {
 
 
 //START CUSTOMER CRUD OPERATIONS
+
 function saveCustomer() {
 
-    //get customer details from user inputs
-    let customerID = $("#txtCusId").val();
-    let customerName = $("#txtCusName").val();
-    let customerAddress = $("#txtCusAddress").val();
-    let customerSalary = $("#txtCusSalary").val();
+    var serialize = $("#customerForm").serialize();
+    console.log(serialize);
 
-    //create customer object
-
-    var customer = new CustomerDTO(customerID,customerName,customerAddress,customerSalary);
-    customerDB.push(customer);
-
-    $("#txtCustomerCount").text(customerDB.length);
+    $.ajax({
+        url: "customer",
+        method: "POST",
+        data: serialize,
+        success: function (res) {
+            if (res.status == 200) {
+                alert(res.message);
+                loadAllCustomer();
+            } else {
+                alert(res.data);
+            }
+        },
+        error: function (ob, textStatus, error) {
+            console.log(ob);
+            console.log(textStatus);
+            console.log(error);
+        }
+    })
 }
 
 function deleteCustomer(index) {
-    customerDB.pop(index);
 
     clearAll();
     loadAllCustomer();
-    $("#txtCustomerCount").text(customerDB.length);
-
 }
 
 function updateCustomer() {
-    let cusName = $("#customerName").val();
-    let cusAddress = $("#customerAddress").val();
-    let cusSalary = $("#customerSalary").val();
-
-    var cusId = $("#customerId").val();
-    var response = searchCustomer(cusId);
-    let index = customerDB.indexOf(response);
-
-    customerDB[index].setCustomerName(cusName);
-    customerDB[index].setCustomerSalary(cusSalary);
-    customerDB[index].setCustomerAddress(cusAddress);
 
     clearAll();
     loadAllCustomer();
@@ -283,11 +244,7 @@ function updateCustomer() {
 }
 
 function searchCustomer(id) {
-    for (var i = 0; i < customerDB.length; i++) {
-        if (customerDB[i].getCustomerId() == id) {
-            return customerDB[i];
-        }
-    }
+
 }
 
 function clearAll() {
@@ -305,11 +262,19 @@ function clearAll() {
 }
 
 function loadAllCustomer() {
-
     $("#customerTable").empty();
-    for (var i of customerDB) {
-        let row = `<tr><td>${i.getCustomerId()}</td><td>${i.getCustomerName()}</td><td>${i.getCustomerAddress()}</td><td>${i.getCustomerSalary()}</td></tr>`;
-        $("#customerTable").append(row);
-    }
+
+    $.ajax({
+        url: "customer?option=GET_ALL_DETAILS",
+        method: "GET",
+        success: function (resp) {
+            for (const customer of resp.data) {
+                let row = `<tr><td>${customer.id}</td><td>${customer.name}</td><td>${customer.salary}</td><td>${customer.address}</td></tr>`;
+                $("#customerTable").append(row);
+            }
+        }
+    });
 }
+
+
 //END CUSTOMER CRUD OPERATIONS
