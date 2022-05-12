@@ -364,27 +364,27 @@
                                             aria-label="Close"></button>
                                 </div>
                                 <div class="modal-body">
-                                    <form>
+                                    <form id="itemForm">
                                         <div>
                                             <label for="txtItemId" class="col-form-label">Item Code:</label>
-                                            <input type="text" class="form-control" id="txtItemId">
+                                            <input type="text" class="form-control" id="txtItemId" name="itemId">
                                             <p><small class="text-danger pl-2" id="lblItemId"></small></p>
                                         </div>
                                         <div>
                                             <label for="txtItemName" class="col-form-label">Item Name:</label>
-                                            <input type="text" class="form-control" id="txtItemName">
+                                            <input type="text" class="form-control" id="txtItemName" name="itemName">
                                             <p><small class="text-danger pl-2" id="lblItemName"></small></p>
 
                                         </div>
                                         <div>
                                             <label for="txtItemPrice" class="col-form-label">Item Price:</label>
-                                            <input type="text" class="form-control" id="txtItemPrice">
+                                            <input type="text" class="form-control" id="txtItemPrice" name="itemPrice">
                                             <p><small class="text-danger pl-2" id="lblItemPrice"></small></p>
 
                                         </div>
                                         <div>
                                             <label for="txtItemQty" class="col-form-label">Item Quantity:</label>
-                                            <input type="number" class="form-control" id="txtItemQty">
+                                            <input type="number" class="form-control" id="txtItemQty" name="itemQty">
                                             <p><small class="text-danger pl-2" id="lblItemQty"></small></p>
                                         </div>
                                     </form>
@@ -407,7 +407,7 @@
                     <div class="col-5 col-sm-5 col-lg">
                         <div class="mb-4">
                             <label for="itemId" class="form-label">Item Code</label>
-                            <input type="text" class="form-control" id="itemId" placeholder="P00-001" disabled>
+                            <input type="text" class="form-control" id="itemId" placeholder="I00-001" disabled>
                         </div>
                     </div>
                     <div class="col-7 col-sm-7 col-lg">

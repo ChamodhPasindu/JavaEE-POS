@@ -185,7 +185,7 @@ $("#btnCustomerSave").click(function () {
 
     saveCustomer();
     clearAll();
-    loadAllCustomerIds();
+    // loadAllCustomerIds();
 
 });
 

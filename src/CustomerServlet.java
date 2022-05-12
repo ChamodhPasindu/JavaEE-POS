@@ -103,8 +103,6 @@ public class CustomerServlet extends HttpServlet {
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
-
-
     }
 
     @Override

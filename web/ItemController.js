@@ -1,4 +1,4 @@
-
+loadAllItem();
 //START ITEM VALIDATION
 
 var regExItemID = /^(I00-)[0-9]{3,4}$/;
@@ -184,43 +184,12 @@ $("#itemPrice").keyup(function () {
 $("#btnItemSave").click(function () {
     saveItem();
     clearAllItemDetails();
-    loadAllItem();
-    loadAllItemIds();
+    // loadAllItemIds();
 
-
-    $("#itemTable>tr").off("click");
-
-    $("#itemTable>tr").click(function () {
-
-        let itemId = $(this).children(":eq(0)").text();
-        let itemName = $(this).children(":eq(1)").text();
-        let itemQty = $(this).children(":eq(2)").text();
-        let itemUnitPrice = $(this).children(":eq(3)").text();
-
-        $("#itemId").val(itemId)
-        $("#itemName").val(itemName)
-        $("#itemQtyOnHand").val(itemQty)
-        $("#itemPrice").val(itemUnitPrice)
-    });
 });
 
 $("#btnItemSearch").click(function () {
-    var searchID = $("#txtItemSearch").val();
-
-    var response = searchItem(searchID);
-    if (response) {
-        $("#itemId").val(response.getItemCode());
-        $("#itemName").val(response.getItemName());
-        $("#itemQtyOnHand").val(response.getItemQty());
-        $("#itemPrice").val(response.getItemPrice());
-
-        $('#itemName,#itemPrice,#itemQtyOnHand').prop('disabled', false);
-        $("#btnItemDelete").prop('disabled', false);
-
-    } else {
-        clearAllItemDetails();
-        alert("No such a Customer")
-    }
+        searchItem();
 });
 
 $("#btnItemUpdate").click(function () {
@@ -241,19 +210,26 @@ $("#btnItemDelete").click(function () {
 
 //START ITEM CRUD OPERATIONS
 function saveItem() {
+    var serialize = $("#itemForm").serialize();
 
-    //get item details from user inputs
-    let itemID = $("#txtItemId").val();
-    let itemName = $("#txtItemName").val();
-    let itemQty = $("#txtItemQty").val();
-    let itemPrice = $("#txtItemPrice").val();
-
-    //create customer object
-   var item=new ItemDTO(itemID,itemName,itemPrice,itemQty);
-
-    itemDB.push(item);
-
-    $("#txtItemCount").text(itemDB.length);
+    $.ajax({
+        url: "item",
+        method: "POST",
+        data: serialize,
+        success: function (res) {
+            if (res.status == 200) {
+                alert(res.message);
+                loadAllItem();
+            } else {
+                alert(res.data);
+            }
+        },
+        error: function (ob, textStatus, error) {
+            console.log(ob);
+            console.log(textStatus);
+            console.log(error);
+        }
+    })
 
 }
 
@@ -273,18 +249,45 @@ function clearAllItemDetails() {
 
 function loadAllItem() {
     $("#itemTable").empty();
-    for (var i of itemDB) {
-        let row = `<tr><td>${i.getItemCode()}</td><td>${i.getItemName()}</td><td>${i.getItemQty()}</td><td>${i.getItemPrice()}</td></tr>`;
-        $("#itemTable").append(row);
-    }
+
+    $.ajax({
+        url: "item?option=GET_ALL_DETAILS",
+        method: "GET",
+        success: function (resp) {
+            for (const item of resp.data) {
+                let row = `<tr><td>${item.id}</td><td>${item.name}</td><td>${item.qty}</td><td>${item.price.toFixed(2)}</td></tr>`;
+                $("#itemTable").append(row);
+            }
+        }
+    });
 }
 
-function searchItem(id) {
-    for (var i = 0; i < itemDB.length; i++) {
-        if (itemDB[i].getItemCode() == id) {
-            return itemDB[i];
+function searchItem() {
+    let itemId = $("#txtItemSearch").val();
+    $.ajax({
+        url: "item?option=SEARCH&itemId="+itemId,
+        method: "GET",
+        success: function (res) {
+            if (res.status == 200) {
+                for (const item of res.data) {
+                    $("#itemId").val(item.id);
+                    $("#itemName").val(item.name);
+                    $("#itemPrice").val(item.price.toFixed(2));
+                    $("#itemQtyOnHand").val(item.qty);
+                }
+
+                $('#itemName,#itemPrice,#itemQtyOnHand').prop('disabled', false);
+                $("#btnItemDelete").prop('disabled', false);
+            } else {
+                alert("Wrong ID inserted");
+            }
+        },
+        error: function (ob, textStatus, error) {
+            console.log(ob);
+            console.log(textStatus);
+            console.log(error);
         }
-    }
+    });
 }
 
 function updateItem() {
