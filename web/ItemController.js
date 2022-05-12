@@ -197,13 +197,9 @@ $("#btnItemUpdate").click(function () {
 });
 
 $("#btnItemDelete").click(function () {
-    var itemId = $("#itemId").val();
-    var response = searchItem(itemId);
-
-    let index = itemDB.indexOf(response);
-    let res = confirm("Do you really need to delete this item ?");
+    let res = confirm("Do you really need to delete this Item ?");
     if (res) {
-        deleteItem(index);
+        deleteItem();
     }
 });
 //END ITEM BTN FUNCTIONS
@@ -291,30 +287,47 @@ function searchItem() {
 }
 
 function updateItem() {
-    let itemName = $("#itemName").val();
-    let itemQty = $("#itemQtyOnHand").val();
-    let itemPrice = $("#itemPrice").val();
+    let formData = {
+        id:$("#itemId").val() ,
+        name:$("#itemName").val() ,
+        price:$("#itemPrice").val() ,
+        qty:$("#itemQtyOnHand").val()
+    }
+    $.ajax({
+        url: "item" ,
+        method: "PUT",
+        contentType:"application/json",
+        data:JSON.stringify(formData),
+        success: function (res) {
+            if (res.status == 200) {
+                alert(res.message);
+                clearAllItemDetails();
+            } else if (res.status == 400) {
+                alert(res.message);
+            } else {
+                alert(res.data);
+            }
+        },
+        error: function (ob, errorStus) {
+            console.log(ob);
+        }
+    });
 
-    var itemId = $("#itemId").val();
-    var response = searchItem(itemId);
-    let index = itemDB.indexOf(response);
-
-    itemDB[index].setItemName(itemName);
-    itemDB[index].setItemQty(itemQty);
-    itemDB[index].setItemPrice(itemPrice);
-
-    clearAllItemDetails();
     loadAllItem();
 }
 
-function deleteItem(index) {
-    itemDB.pop(index);
+function deleteItem() {
+    let itemId = $("#itemId").val();
 
+    $.ajax({
+        url: "item?itemId=" + itemId,
+        method: "DELETE",
+        success: function (res) {
+            alert(res);
+            loadAllItem();
+        }
+    });
     clearAllItemDetails();
-    loadAllItem();
-
-    $("#txtItemCount").text(itemDB.length);
-
 
 }
 //END ITEM CRUD OPERATIONS

@@ -1,6 +1,4 @@
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
+import javax.json.*;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -106,7 +104,44 @@ public class ItemServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPut(req, resp);
+        JsonReader reader = Json.createReader(req.getReader());
+        JsonObject jsonObject = reader.readObject();
+        String itemId = jsonObject.getString("id");
+        String itemName = jsonObject.getString("name");
+        String itemPrice = jsonObject.getString("price");
+        String itemQty = jsonObject.getString("qty");
+        PrintWriter writer = resp.getWriter();
+        resp.setContentType("application/json");
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/Market", "root", "root1234");
+            PreparedStatement pstm = connection.prepareStatement("Update Item set itemName=?,unitPrice=?,qty=? where itemId=?");
+            pstm.setObject(1, itemName);
+            pstm.setObject(2, itemPrice);
+            pstm.setObject(3, itemQty);
+            pstm.setObject(4, itemId);
+            if (pstm.executeUpdate() > 0) {
+                JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+                objectBuilder.add("status", 200);
+                objectBuilder.add("message", "Successfully Updated");
+                objectBuilder.add("data", "");
+                writer.print(objectBuilder.build());
+            } else {
+                JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+                objectBuilder.add("status", 400);
+                objectBuilder.add("message", "Update Failed");
+                objectBuilder.add("data", "");
+                writer.print(objectBuilder.build());
+            }
+            connection.close();
+        } catch (SQLException | ClassNotFoundException throwables) {
+            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+            objectBuilder.add("status", 500);
+            objectBuilder.add("message", "Update Failed");
+            objectBuilder.add("data", throwables.getLocalizedMessage());
+            writer.print(objectBuilder.build());
+        }
     }
 
     @Override
@@ -150,6 +185,25 @@ public class ItemServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doDelete(req, resp);
+        String itemId=req.getParameter("itemId");
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/Market", "root", "root1234");
+
+            PreparedStatement pstm=connection.prepareStatement("delete from Item where itemId=?");
+            pstm.setObject(1,itemId);
+
+            boolean b = pstm.executeUpdate() > 0;
+            PrintWriter writer=resp.getWriter();
+
+            if (b){
+                writer.write("Item Deleted");
+            }
+
+        } catch (ClassNotFoundException | SQLException e) {
+            resp.sendError(500, e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
