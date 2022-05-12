@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS Customer;
 CREATE TABLE IF NOT EXISTS Customer(
     custId VARCHAR (7),
     custName VARCHAR (30) NOT NULL DEFAULT 'unknown',
-    custSalary DECIMAL (6,2) DEFAULT 0.00,
+    custSalary DECIMAL (10,2) DEFAULT 0.00,
     custAddress VARCHAR (100),
     CONSTRAINT PRIMARY KEY (custId)
     );
@@ -18,7 +18,7 @@ DROP TABLE IF EXISTS Item;
 CREATE TABLE IF NOT EXISTS Item(
     itemId VARCHAR (7),
     itemName VARCHAR (50),
-    unitPrice DECIMAL (6,2) DEFAULT 0.00,
+    unitPrice DECIMAL (10,2) DEFAULT 0.00,
     qty INT DEFAULT 0,
     CONSTRAINT PRIMARY KEY (itemId)
     );

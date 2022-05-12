@@ -1,7 +1,5 @@
 import javax.annotation.Resource;
-import javax.json.Json;
-import javax.json.JsonArrayBuilder;
-import javax.json.JsonObjectBuilder;
+import javax.json.*;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -18,7 +16,6 @@ public class CustomerServlet extends HttpServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-
         try {
             String option=req.getParameter("option");
             Class.forName("com.mysql.cj.jdbc.Driver");
@@ -27,9 +24,49 @@ public class CustomerServlet extends HttpServlet {
             resp.setContentType("application/json");
 
 
+
+
             switch (option){
                 case "SEARCH":
+                    try {
+                        String cusId=req.getParameter("cusId");
+                        PreparedStatement pstm = connection.prepareStatement("select * from Customer where custId=?");
+                        pstm.setObject(1,cusId);
+                        ResultSet rst = pstm.executeQuery();
 
+                        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder(); //
+
+
+                        if (rst.next()) {
+                            String id = rst.getString(1);
+                            String name = rst.getString(2);
+                            double salary = rst.getDouble(3);
+                            String address = rst.getString(4);
+
+                            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+                            objectBuilder.add("id", id);
+                            objectBuilder.add("name", name);
+                            objectBuilder.add("salary", salary);
+                            objectBuilder.add("address", address);
+                            arrayBuilder.add(objectBuilder.build());
+
+                            JsonObjectBuilder response = Json.createObjectBuilder();
+                            response.add("status", 200);
+                            response.add("message", "Done");
+                            response.add("data", arrayBuilder.build());
+                            writer.print(response.build());
+
+                        }else{
+                            JsonObjectBuilder response = Json.createObjectBuilder();
+                            response.add("status", 400);
+                            response.add("message", "Error");
+                            response.add("data", arrayBuilder.build());
+                            writer.print(response.build());
+                        }
+
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
                     break;
 
                 case "GET_ALL_DETAILS":
@@ -60,9 +97,8 @@ public class CustomerServlet extends HttpServlet {
                     }
                     break;
 
-                case "GET_ALL_IDS":
+                default:
 
-                    break;
             }
         } catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
@@ -73,7 +109,44 @@ public class CustomerServlet extends HttpServlet {
 
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPut(req, resp);
+        JsonReader reader = Json.createReader(req.getReader());
+        JsonObject jsonObject = reader.readObject();
+        String customerID = jsonObject.getString("id");
+        String customerName = jsonObject.getString("name");
+        String customerAddress = jsonObject.getString("address");
+        String customerSalary = jsonObject.getString("salary");
+        PrintWriter writer = resp.getWriter();
+        resp.setContentType("application/json");
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/Market", "root", "root1234");
+            PreparedStatement pstm = connection.prepareStatement("Update Customer set custName=?,custAddress=?,custSalary=? where custId=?");
+            pstm.setObject(1, customerName);
+            pstm.setObject(2, customerAddress);
+            pstm.setObject(3, customerSalary);
+            pstm.setObject(4, customerID);
+            if (pstm.executeUpdate() > 0) {
+                JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+                objectBuilder.add("status", 200);
+                objectBuilder.add("message", "Successfully Updated");
+                objectBuilder.add("data", "");
+                writer.print(objectBuilder.build());
+            } else {
+                JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+                objectBuilder.add("status", 400);
+                objectBuilder.add("message", "Update Failed");
+                objectBuilder.add("data", "");
+                writer.print(objectBuilder.build());
+            }
+            connection.close();
+        } catch (SQLException | ClassNotFoundException throwables) {
+            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+            objectBuilder.add("status", 500);
+            objectBuilder.add("message", "Update Failed");
+            objectBuilder.add("data", throwables.getLocalizedMessage());
+            writer.print(objectBuilder.build());
+        }
     }
 
     @Override
@@ -119,6 +192,26 @@ public class CustomerServlet extends HttpServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doDelete(req, resp);
+
+        String customerId=req.getParameter("CusId");
+
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/Market", "root", "root1234");
+
+            PreparedStatement pstm=connection.prepareStatement("delete from Customer where custId=?");
+            pstm.setObject(1,customerId);
+
+            boolean b = pstm.executeUpdate() > 0;
+            PrintWriter writer=resp.getWriter();
+
+            if (b){
+                writer.write("Customer Deleted");
+            }
+
+        } catch (ClassNotFoundException | SQLException e) {
+            resp.sendError(500, e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

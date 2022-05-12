@@ -185,16 +185,19 @@ $("#btnCustomerSave").click(function () {
 
     saveCustomer();
     clearAll();
-    // loadAllCustomerIds();
+    loadAllCustomerIds();
 
 });
 
 $("#btnCustomerSearch").click(function () {
-
+    searchCustomer();
 });
 
 $("#btnCustomerDelete").click(function () {
-
+    let res = confirm("Do you really need to delete this customer ?");
+    if (res) {
+        deleteCustomer();
+    }
 });
 
 $("#btnCustomerUpdate").click(function () {
@@ -230,21 +233,76 @@ function saveCustomer() {
     })
 }
 
-function deleteCustomer(index) {
+function deleteCustomer() {
+    let customerId = $("#customerId").val();
 
+    $.ajax({
+        url: "customer?CusId=" + customerId,
+        method: "DELETE",
+        success: function (res) {
+            alert(res);
+            loadAllCustomer();
+        }
+    });
     clearAll();
-    loadAllCustomer();
 }
 
 function updateCustomer() {
-
+    let formData = {
+        id:$("#customerId").val() ,
+        name:$("#customerName").val() ,
+        salary:$("#customerSalary").val() ,
+        address:$("#customerAddress").val()
+    }
+    $.ajax({
+        url: "customer" ,
+        method: "PUT",
+        contentType:"application/json",
+        data:JSON.stringify(formData),
+        success: function (res) {
+            if (res.status == 200) { // process is  ok
+                alert(res.message);
+                loadAllCustomer();
+            } else if (res.status == 400) { // there is a problem with the client side
+                alert(res.message);
+            } else {
+                alert(res.data); // else maybe there is an exception
+            }
+        },
+        error: function (ob, errorStus) {
+            console.log(ob); // other errors
+        }
+    });
     clearAll();
-    loadAllCustomer();
 
 }
 
-function searchCustomer(id) {
+function searchCustomer() {
+    let customerId = $("#txtCustomerSearch").val();
+    $.ajax({
+        url: "customer?option=SEARCH&cusId="+customerId,
+        method: "GET",
+        success: function (res) {
+            if (res.status == 200) {
+                for (const customer of res.data) {
+                    $("#customerId").val(customer.id);
+                    $("#customerName").val(customer.name);
+                    $("#customerSalary").val(customer.salary.toFixed(2));
+                    $("#customerAddress").val(customer.address);
+                }
 
+                $('#customerName,#customerSalary,#customerAddress').prop('disabled', false);
+                $("#btnCustomerDelete").prop('disabled', false);
+            } else {
+                alert("Wrong ID inserted");
+            }
+        },
+        error: function (ob, textStatus, error) {
+            console.log(ob);
+            console.log(textStatus);
+            console.log(error);
+        }
+    });
 }
 
 function clearAll() {
@@ -269,7 +327,7 @@ function loadAllCustomer() {
         method: "GET",
         success: function (resp) {
             for (const customer of resp.data) {
-                let row = `<tr><td>${customer.id}</td><td>${customer.name}</td><td>${customer.salary}</td><td>${customer.address}</td></tr>`;
+                let row = `<tr><td>${customer.id}</td><td>${customer.name}</td><td>${customer.salary.toFixed(2)}</td><td>${customer.address}</td></tr>`;
                 $("#customerTable").append(row);
             }
         }
