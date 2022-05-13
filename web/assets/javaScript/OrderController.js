@@ -2,6 +2,7 @@ generateOrderId();
 loadAllCustomerIds();
 loadAllItemIds();
 
+tempDB=new Array();
 
 //Set current date
 var now = new Date();
@@ -12,7 +13,6 @@ $('#txtOrderDate').val(today);
 
 //START ORDER BTN FUNCTION
 $("#btnAddItem").click(function () {
-    let orderId=$("#txtOrderId").val();
     let itemID=$("#cmbItemId").val();
     let name=$("#txtOrderItemName").val();
     var price=$("#txtOrderItemPrice").val();
@@ -57,10 +57,9 @@ $("#btnAddItem").click(function () {
 });
 
 $("#btnPlaceOrder").click(function () {
-    saveOrderDetails();
     placeOrder();
     clearAllDetails();
-    loadAllOrderTable();
+    // loadAllOrderTable();
 
 });
 
@@ -164,11 +163,35 @@ function placeOrder() {
     let total = $("#txtSubTotal").val();
     let discount = $("#txtDiscount").val();
 
-    var order=new OrderDTO(orderId,cusId,date,total,discount);
-    orderDB.push(order);
-    alert("Order Placed Successfully")
+    let orderObj={
+        orderDetail:tempDB,
+        orderId:orderId,
+        custId:cusId,
+        date:date,
+        cost:total,
+        discount:discount
+    }
+    $.ajax({
+        url: "order" ,
+        method: "POST",
+        contentType:"application/json",
+        data:JSON.stringify(orderObj),
+        success: function (res) {
+            if (res.status == 200) {
+                alert(res.message);
+                generateOrderId();
+            } else if (res.status == 400) {
+                alert(res.message);
+            } else {
+                alert(res.data);
+            }
+        },
+        error: function (ob, errorStus) {
+            console.log(ob);
+        }
+    });
 
-    $("#txtOrderCount").text(orderDB.length);
+    // $("#txtOrderCount").text(orderDB.length);
 
 }
 
@@ -191,7 +214,6 @@ function saveOrderDetails() {
 }
 
 function clearAllDetails() {
-    generateOrderId();
     $("#txtOrderCustomerName,#txtOrderSalary,#txtOrderAddress,#txtOrderItemName,#txtOrderItemPrice,#txtOrderQtyOnHand,#txtOrderQty,#txtTotal,#txtSubTotal,#txtCash,#txtDiscount,#txtBalance").val("");
     $("#btnAddItem,#btnPlaceOrder").prop('disabled',true);
     $("#txtDiscount,#txtCash").prop('disabled',true);
