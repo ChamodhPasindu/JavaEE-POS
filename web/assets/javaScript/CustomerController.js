@@ -1,5 +1,4 @@
 loadAllCustomer();
-
 getCustomerCount();
 
 
@@ -245,6 +244,7 @@ function deleteCustomer() {
         success: function (res) {
             alert(res);
             loadAllCustomer();
+            getCustomerCount();
         }
     });
     clearAll();
@@ -252,16 +252,16 @@ function deleteCustomer() {
 
 function updateCustomer() {
     let formData = {
-        id:$("#customerId").val() ,
-        name:$("#customerName").val() ,
-        salary:$("#customerSalary").val() ,
-        address:$("#customerAddress").val()
+        id: $("#customerId").val(),
+        name: $("#customerName").val(),
+        salary: $("#customerSalary").val(),
+        address: $("#customerAddress").val()
     }
     $.ajax({
-        url: "customer" ,
+        url: "customer",
         method: "PUT",
-        contentType:"application/json",
-        data:JSON.stringify(formData),
+        contentType: "application/json",
+        data: JSON.stringify(formData),
         success: function (res) {
             if (res.status == 200) {
                 alert(res.message);
@@ -283,7 +283,7 @@ function updateCustomer() {
 function searchCustomer() {
     let customerId = $("#txtCustomerSearch").val();
     $.ajax({
-        url: "customer?option=SEARCH&cusId="+customerId,
+        url: "customer?option=SEARCH&cusId=" + customerId,
         method: "GET",
         success: function (res) {
             if (res.status == 200) {
@@ -339,12 +339,12 @@ function loadAllCustomer() {
 
 function getCustomerCount() {
     $.ajax({
-        url: "customer?option=COUNT,
+        url: "customer?option=COUNT",
         method: "GET",
         success: function (res) {
             if (res.status == 200) {
                 for (const customer of res.data) {
-                    $("#txtCustomerCount").val(customer.count);
+                    $("#txtCustomerCount").text(customer.count);
                 }
             }
         },
@@ -355,7 +355,6 @@ function getCustomerCount() {
         }
     });
 }
-
 
 
 //END CUSTOMER CRUD OPERATIONS

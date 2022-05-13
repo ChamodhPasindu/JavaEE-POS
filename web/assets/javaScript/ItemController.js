@@ -1,4 +1,5 @@
 loadAllItem();
+getItemCount();
 //START ITEM VALIDATION
 
 var regExItemID = /^(I00-)[0-9]{3,4}$/;
@@ -217,6 +218,7 @@ function saveItem() {
                 alert(res.message);
                 loadAllItem();
                 loadAllItemIds();
+                getItemCount();
             } else {
                 alert(res.data);
             }
@@ -326,9 +328,30 @@ function deleteItem() {
         success: function (res) {
             alert(res);
             loadAllItem();
+            getItemCount()
         }
     });
     clearAllItemDetails();
 
 }
+
+function getItemCount() {
+    $.ajax({
+        url: "item?option=COUNT",
+        method: "GET",
+        success: function (res) {
+            if (res.status == 200) {
+                for (const item of res.data) {
+                    $("#txtItemCount").text(item.count);
+                }
+            }
+        },
+        error: function (ob, textStatus, error) {
+            console.log(ob);
+            console.log(textStatus);
+            console.log(error);
+        }
+    });
+}
+
 //END ITEM CRUD OPERATIONS
