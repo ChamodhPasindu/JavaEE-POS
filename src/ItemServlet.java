@@ -93,7 +93,27 @@ public class ItemServlet extends HttpServlet {
                     }
                     break;
 
-                default:
+                case "GET_ALL_ID":
+                    try {
+                        ResultSet rst = connection.prepareStatement("select itemId from Item").executeQuery();
+                        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder(); //
+
+                        while (rst.next()) {
+                            String id = rst.getString(1);
+
+                            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+                            objectBuilder.add("id", id);
+                            arrayBuilder.add(objectBuilder.build());
+                        }
+                        JsonObjectBuilder response = Json.createObjectBuilder();
+                        response.add("status", 200);
+                        response.add("message", "Done");
+                        response.add("data", arrayBuilder.build());
+                        writer.print(response.build());
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                    break;
 
             }
         } catch (ClassNotFoundException | SQLException e) {
