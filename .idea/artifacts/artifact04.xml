@@ -1,7 +1,7 @@
 <component name="ArtifactManager">
-  <artifact type="war" name="artifact02">
-    <output-path>$PROJECT_DIR$/out/artifacts/artifact02</output-path>
-    <root id="archive" name="artifact02.war">
+  <artifact type="war" name="artifact04">
+    <output-path>$PROJECT_DIR$/out/artifacts/artifact04</output-path>
+    <root id="archive" name="artifact04.war">
       <element id="directory" name="WEB-INF">
         <element id="directory" name="classes">
           <element id="module-output" name="JavaEE" />

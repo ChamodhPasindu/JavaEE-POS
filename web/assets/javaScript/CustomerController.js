@@ -1,5 +1,7 @@
 loadAllCustomer();
 
+getCustomerCount();
+
 
 //START CUSTOMER VALIDATION
 var regExCusID = /^(C00-)[0-9]{3,4}$/;
@@ -221,6 +223,7 @@ function saveCustomer() {
                 alert(res.message);
                 loadAllCustomer();
                 loadAllCustomerIds();
+                getCustomerCount();
             } else {
                 alert(res.data);
             }
@@ -333,6 +336,26 @@ function loadAllCustomer() {
         }
     });
 }
+
+function getCustomerCount() {
+    $.ajax({
+        url: "customer?option=COUNT,
+        method: "GET",
+        success: function (res) {
+            if (res.status == 200) {
+                for (const customer of res.data) {
+                    $("#txtCustomerCount").val(customer.count);
+                }
+            }
+        },
+        error: function (ob, textStatus, error) {
+            console.log(ob);
+            console.log(textStatus);
+            console.log(error);
+        }
+    });
+}
+
 
 
 //END CUSTOMER CRUD OPERATIONS
