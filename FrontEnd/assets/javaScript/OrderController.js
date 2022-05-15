@@ -28,11 +28,14 @@ $("#btnAddItem").click(function () {
 
     let item = checkItemExist(itemID);
     if (item) {
+        console.log(typeof item.qty);
         if ((+item.qty)+(+qty)<=qtyOnHand){
             item.qty=(+item.qty)+(+qty);
             item.total=(+item.total)+(+itemTotal);
 
             $("#txtTotal").val(total.toFixed(2));
+            console.log(typeof item.qty);
+
         }else {
             alert("Numbers of order quantity are exceed the limit");
         }
@@ -43,7 +46,7 @@ $("#btnAddItem").click(function () {
                 itemId: itemID,
                 name: name,
                 price: price,
-                qty: qty,
+                qty: +qty,
                 total: itemTotal
             }
             tempDB.push(tempObj);
@@ -127,7 +130,7 @@ function loadCart() {
     $("#addItemTable").empty();
 
     for (var i of tempDB){
-        let row = `<tr><td>${i.itemId}</td><td>${i.name}</td><td>${i.price}</td><td>${i.qty}</td><td>${i.total}</td></tr>`;
+        let row = `<tr><td>${i.itemId}</td><td>${i.name}</td><td>${i.price}</td><td>${i.qty}</td><td>${i.total.toFixed(2)}</td></tr>`;
         $("#addItemTable").append(row);
     }
 }
@@ -155,6 +158,7 @@ function placeOrder() {
         cost:total,
         discount:discount
     }
+
     $.ajax({
         url: "http://localhost:8080/artifact07/order" ,
         method: "POST",
@@ -166,6 +170,7 @@ function placeOrder() {
                 generateOrderId();
                 getOrderCount();
                 loadAllOrderTable();
+                loadAllItem();
             } else if (res.status == 400) {
                 alert(res.message);
             } else {
@@ -241,7 +246,6 @@ function clearAllOrderDetails() {
 function deleteOrder() {
 
     var orderId = $("#homeOrderId").val();
-    console.log(orderId);
     $.ajax({
         url: "http://localhost:8080/artifact07/order?orderId=" + orderId,
         method: "DELETE",
@@ -325,6 +329,7 @@ $("#txtDiscount").keyup(function (event){
             var subTotal=total-(total*(discount/100));
             $("#txtSubTotal").val(subTotal.toFixed(2));
             $("#txtCash").prop('disabled',false);
+            $("#btnAddItem").prop('disabled', true);
 
         }
     }

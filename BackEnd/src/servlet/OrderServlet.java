@@ -1,5 +1,13 @@
 package servlet;
 
+import bo.BOFactory;
+import bo.custom.PlaceOrderBO;
+import dao.DAOFactory;
+import dao.custom.OrderDAO;
+import dto.CustomDTO;
+import dto.OrderDTO;
+import dto.OrderDetailDTO;
+
 import javax.annotation.Resource;
 import javax.json.*;
 import javax.servlet.ServletException;
@@ -11,9 +19,12 @@ import javax.sql.DataSource;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.*;
+import java.util.ArrayList;
 
 @WebServlet(urlPatterns = "/order")
 public class OrderServlet extends HttpServlet {
+
+    PlaceOrderBO placeOrderBO=(PlaceOrderBO) BOFactory.getBoFactory().getBO(BOFactory.BOTypes.PLACE_ORDER);
 
     @Resource(name = "java:comp/env/jdbc/pool")
     DataSource ds;
@@ -29,149 +40,94 @@ public class OrderServlet extends HttpServlet {
 
             switch (option) {
                 case "SEARCH":
-                    try {
-                        String orderId = req.getParameter("orderId");
-                        PreparedStatement pstm = connection.prepareStatement("select orderId,custName,date,discount,cost from Orders join Customer on Orders.custId=Customer.custId where orderId=?;");
-                        pstm.setObject(1, orderId);
-                        ResultSet rst = pstm.executeQuery();
-                        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder(); //
+                    String searchOrderId = req.getParameter("orderId");
+                    CustomDTO detailObject = placeOrderBO.getDetailObject(connection, searchOrderId);
 
-                        if (rst.next()) {
-                            String id = rst.getString(1);
-                            String name = rst.getString(2);
-                            String date = rst.getString(3);
-                            String discount = rst.getString(4);
-                            double cost = rst.getDouble(5);
+                    JsonArrayBuilder arrayBuilderSearch = Json.createArrayBuilder();
 
+                    if (detailObject!=null){
+                        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+                        objectBuilder.add("id", detailObject.getOrderId());
+                        objectBuilder.add("name", detailObject.getCustName());
+                        objectBuilder.add("date", detailObject.getDate());
+                        objectBuilder.add("discount", detailObject.getDiscount());
+                        objectBuilder.add("cost", detailObject.getDiscount());
+                        arrayBuilderSearch.add(objectBuilder.build());
 
-                            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                            objectBuilder.add("id", id);
-                            objectBuilder.add("name", name);
-                            objectBuilder.add("date", date);
-                            objectBuilder.add("discount", discount);
-                            objectBuilder.add("cost", cost);
-                            arrayBuilder.add(objectBuilder.build());
-
-                            JsonObjectBuilder response = Json.createObjectBuilder();
-                            response.add("status", 200);
-                            response.add("message", "Done");
-                            response.add("data", arrayBuilder.build());
-                            writer.print(response.build());
-
-                        } else {
-                            JsonObjectBuilder response = Json.createObjectBuilder();
-                            response.add("status", 400);
-                            response.add("message", "Error");
-                            response.add("data", arrayBuilder.build());
-                            writer.print(response.build());
-                        }
-
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+                        JsonObjectBuilder response = Json.createObjectBuilder();
+                        response.add("status", 200);
+                        response.add("message", "Done");
+                        response.add("data", arrayBuilderSearch.build());
+                        writer.print(response.build());
+                    }else {
+                        JsonObjectBuilder response = Json.createObjectBuilder();
+                        response.add("status", 400);
+                        response.add("message", "Error");
+                        response.add("data", arrayBuilderSearch.build());
+                        writer.print(response.build());
                     }
+
+
                     break;
                 case "GET_ID":
 
-                    try {
-                        ResultSet rst = connection.prepareStatement("SELECT OrderId FROM Orders ORDER BY OrderId DESC LIMIT 1").executeQuery();
-                        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder(); //
+                    String orderId = placeOrderBO.createOrderId(connection);
 
-                        if (rst.next()) {
-                            int tempId = Integer.
-                                    parseInt(rst.getString(1).split("-")[1]);
-                            tempId = tempId + 1;
-                            if (tempId <= 9) {
-                                String id = "OID-00" + tempId;
-                                JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                                objectBuilder.add("id", id);
-                                arrayBuilder.add(objectBuilder.build());
+                    JsonObjectBuilder objectBuilderId = Json.createObjectBuilder();
+                    JsonArrayBuilder arrayBuilderId = Json.createArrayBuilder();
+                    objectBuilderId.add("id", orderId);
+                    arrayBuilderId.add(objectBuilderId.build());
 
-                            } else if (tempId <= 99) {
-                                String id = "OID-0" + tempId;
-                                JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                                objectBuilder.add("id", id);
-                                arrayBuilder.add(objectBuilder.build());
+                    JsonObjectBuilder response1 = Json.createObjectBuilder();
+                    response1.add("status", 200);
+                    response1.add("message", "Done");
+                    response1.add("data", arrayBuilderId.build());
+                    writer.print(response1.build());
 
-                            } else {
-                                String id = "OID-" + tempId;
-                                JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                                objectBuilder.add("id", id);
-                                arrayBuilder.add(objectBuilder.build());
-                            }
 
-                        } else {
-                            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                            String id = "OID-001";
-                            objectBuilder.add("id", id);
-                            arrayBuilder.add(objectBuilder.build());
-
-                        }
-                        JsonObjectBuilder response = Json.createObjectBuilder();
-                        response.add("status", 200);
-                        response.add("message", "Done");
-                        response.add("data", arrayBuilder.build());
-                        writer.print(response.build());
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
                     break;
 
                 case "GET_ALL_DETAILS":
-                    try {
-                        ResultSet rst = connection.prepareStatement("select orderId,custName,date,discount,cost from Orders join Customer on Orders.custId=Customer.custId;").executeQuery();
-                        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder(); //
 
-                        while (rst.next()) {
-                            String id = rst.getString(1);
-                            String name = rst.getString(2);
-                            String date = rst.getString(3);
-                            String discount = rst.getString(4);
-                            double cost = rst.getDouble(5);
+                    JsonArrayBuilder arrayBuilder = Json.createArrayBuilder();
 
-                            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                            objectBuilder.add("id", id);
-                            objectBuilder.add("name", name);
-                            objectBuilder.add("date", date);
-                            objectBuilder.add("discount", discount);
-                            objectBuilder.add("cost", cost);
-                            arrayBuilder.add(objectBuilder.build());
-                        }
-                        JsonObjectBuilder response = Json.createObjectBuilder();
-                        response.add("status", 200);
-                        response.add("message", "Done");
-                        response.add("data", arrayBuilder.build());
-                        writer.print(response.build());
-                    } catch (SQLException e) {
-                        e.printStackTrace();
+                    ArrayList<CustomDTO> detailArray = placeOrderBO.getDetailArray(connection);
+                    for (CustomDTO dto:detailArray) {
+                        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+                        objectBuilder.add("id", dto.getOrderId());
+                        objectBuilder.add("name", dto.getCustName());
+                        objectBuilder.add("date", dto.getDate());
+                        objectBuilder.add("discount", dto.getDiscount());
+                        objectBuilder.add("cost", dto.getCost());
+                        arrayBuilder.add(objectBuilder.build());
                     }
+                    JsonObjectBuilder response = Json.createObjectBuilder();
+                    response.add("status", 200);
+                    response.add("message", "Done");
+                    response.add("data", arrayBuilder.build());
+                    writer.print(response.build());
+
                     break;
                 case "COUNT":
-                    try {
-                        ResultSet rst = connection.prepareStatement("select count(orderId) from Orders").executeQuery();
-                        JsonArrayBuilder arrayBuilder = Json.createArrayBuilder(); //
 
-                        while (rst.next()) {
-                            String count = rst.getString(1);
+                    String count = placeOrderBO.getOrderCount(connection);
 
-                            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                            objectBuilder.add("count", count);
-                            arrayBuilder.add(objectBuilder.build());
-                        }
-                        JsonObjectBuilder response = Json.createObjectBuilder();
-                        response.add("status", 200);
-                        response.add("message", "Done");
-                        response.add("data", arrayBuilder.build());
-                        writer.print(response.build());
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
+                    JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
+                    JsonArrayBuilder arrayBuilderCount = Json.createArrayBuilder();
+                    objectBuilder.add("count", count);
+                    arrayBuilderCount.add(objectBuilder.build());
+
+                    JsonObjectBuilder response2 = Json.createObjectBuilder();
+                    response2.add("status", 200);
+                    response2.add("message", "Done");
+                    response2.add("data", arrayBuilderCount.build());
+                    writer.print(response2.build());
                     break;
-
 
             }
             connection.close();
 
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
     }
@@ -195,76 +151,33 @@ public class OrderServlet extends HttpServlet {
         PrintWriter writer = resp.getWriter();
         resp.setContentType("application/json");
 
-        Connection connection = null;
+        System.out.println("doPost ekata awa");
+        ArrayList<OrderDetailDTO> orderDetailDTOS = new ArrayList<>();
+        for (JsonValue detail : orderDetail) {
 
+            orderDetailDTOS.add(new OrderDetailDTO(orderId,detail.asJsonObject().getString("itemId"), detail.asJsonObject().getInt("qty"),
+                    Double.parseDouble(detail.asJsonObject().getString("price"))));
+        }
+
+        OrderDTO orderDTO = new OrderDTO(orderDetailDTOS,orderId,customerId,date,Double.parseDouble(cost),Integer.parseInt(discount));
         try {
-            connection = ds.getConnection();
-            connection.setAutoCommit(false);
-
-            PreparedStatement pstm = connection.prepareStatement("INSERT INTO Orders VALUES (?,?,?,?,?)");
-            pstm.setObject(1, orderId);
-            pstm.setObject(2, date);
-            pstm.setObject(3, customerId);
-            pstm.setObject(4, cost);
-            pstm.setObject(5, discount);
-
-            if (pstm.executeUpdate() > 0) {
-                for (JsonValue detail : orderDetail) {
-                    PreparedStatement pstm1 = connection.prepareStatement("INSERT INTO OrderDetail VALUES (?,?,?,?)");
-                    pstm1.setObject(1, orderId);
-                    pstm1.setObject(2, detail.asJsonObject().getString("itemId"));
-                    pstm1.setObject(3, detail.asJsonObject().getString("qty"));
-                    pstm1.setObject(4, detail.asJsonObject().getString("price"));
-
-                    if (pstm1.executeUpdate() > 0) {
-                        PreparedStatement pstm2 = connection.prepareStatement("UPDATE Item SET qty=(qty-" + Integer.parseInt(detail.asJsonObject().
-                                getString("qty")) + ") WHERE itemId='" + detail.asJsonObject().getString("itemId") + "'");
-
-                        boolean isSave = pstm2.executeUpdate() > 0;
-                        if (!isSave) {
-                            connection.rollback();
-                            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                            objectBuilder.add("status", 400);
-                            objectBuilder.add("message", "Update qty Failed");
-                            objectBuilder.add("data", "");
-                            writer.print(objectBuilder.build());
-                        }
-                    } else {
-                        connection.rollback();
-                        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                        objectBuilder.add("status", 400);
-                        objectBuilder.add("message", "Update Order Details Failed");
-                        objectBuilder.add("data", "");
-                        writer.print(objectBuilder.build());
-                    }
-                }
-                connection.commit();
+            Connection connection = ds.getConnection();
+            if (placeOrderBO.placeOrder(orderDTO,connection)) {
                 JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
                 objectBuilder.add("status", 200);
                 objectBuilder.add("message", "Order Placed Successfully");
                 objectBuilder.add("data", "");
                 writer.print(objectBuilder.build());
-            } else {
-                connection.rollback();
+            }else {
                 JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
                 objectBuilder.add("status", 400);
                 objectBuilder.add("message", "Update Order Failed");
                 objectBuilder.add("data", "");
                 writer.print(objectBuilder.build());
             }
-        } catch (SQLException throwables) {
-            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-            objectBuilder.add("status", 500);
-            objectBuilder.add("message", "Update Failed");
-            objectBuilder.add("data", throwables.getLocalizedMessage());
-            writer.print(objectBuilder.build());
-        } finally {
-            try {
-                connection.setAutoCommit(true);
-                connection.close();
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
         }
     }
 
@@ -274,24 +187,17 @@ public class OrderServlet extends HttpServlet {
 
 
         try {
-
             Connection connection = ds.getConnection();
-
-
-            PreparedStatement pstm = connection.prepareStatement("delete from Orders where orderId=?");
-            pstm.setObject(1, orderId);
-
-            boolean b = pstm.executeUpdate() > 0;
-            PrintWriter writer = resp.getWriter();
-
-            if (b) {
+            if (placeOrderBO.deleteOrder(connection,orderId)) {
+                PrintWriter writer = resp.getWriter();
                 writer.write("Order Deleted");
             }
             connection.close();
 
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             resp.sendError(500, e.getMessage());
             e.printStackTrace();
         }
+
     }
 }

@@ -83,7 +83,7 @@ $("#txtCusAddress").keyup(function () {
 
     } else {
         $("#txtCusAddress").css('border', '2px solid red');
-        $("#lblCusAddress").text("Cus Name is a required field : Mimum 5");
+        $("#lblCusAddress").text("Cus Address is a required field : Mimum 5");
 
         $("#btnCustomerSave").prop('disabled', true);
 
@@ -184,7 +184,6 @@ $("#customerSalary").keyup(function () {
 
 //START CUSTOMER BTN FUNCTIONS
 $("#btnCustomerSave").click(function () {
-
     saveCustomer();
     clearAll();
 
