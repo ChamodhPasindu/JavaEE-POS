@@ -1,7 +1,5 @@
 package dao;
 
-import dao.custom.OrderDAO;
-import dao.custom.OrderDetailDAO;
 import dao.custom.impl.*;
 
 public class DAOFactory {

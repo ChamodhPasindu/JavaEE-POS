@@ -1,12 +1,9 @@
 package bo.custom.impl;
 
 import bo.custom.ItemBO;
-import dao.CrudUtil;
 import dao.DAOFactory;
 import dao.custom.ItemDAO;
-import dto.CustomerDTO;
 import dto.ItemDTO;
-import entity.Customer;
 import entity.Item;
 
 import java.sql.Connection;

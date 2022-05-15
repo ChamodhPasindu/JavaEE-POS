@@ -28,13 +28,11 @@ $("#btnAddItem").click(function () {
 
     let item = checkItemExist(itemID);
     if (item) {
-        console.log(typeof item.qty);
         if ((+item.qty)+(+qty)<=qtyOnHand){
             item.qty=(+item.qty)+(+qty);
             item.total=(+item.total)+(+itemTotal);
 
             $("#txtTotal").val(total.toFixed(2));
-            console.log(typeof item.qty);
 
         }else {
             alert("Numbers of order quantity are exceed the limit");
@@ -109,8 +107,6 @@ function loadAllItemIds() {
             }
         }
     });
-
-
 }
 
 function generateOrderId() {
@@ -171,10 +167,8 @@ function placeOrder() {
                 getOrderCount();
                 loadAllOrderTable();
                 loadAllItem();
-            } else if (res.status == 400) {
-                alert(res.message);
             } else {
-                alert(res.data);
+                alert(res.message);
             }
         },
         error: function (ob, errorStus) {
@@ -223,9 +217,8 @@ function searchOrder() {
                     $("#homeCustomerName").val(order.name);
                 }
                 $("#btnDeleteOrder").prop('disabled', false);
-
             } else {
-                alert("Wrong ID inserted");
+                alert(res.message);
                 clearAllOrderDetails();
             }
         },
@@ -250,10 +243,13 @@ function deleteOrder() {
         url: "http://localhost:8080/artifact07/order?orderId=" + orderId,
         method: "DELETE",
         success: function (res) {
-            alert(res);
+            alert(res.message);
             loadAllOrderTable();
             clearAllOrderDetails();
             getOrderCount();
+        },
+        error: function (ob, errorStus) {
+            console.log(ob);
         }
     });
 }
@@ -386,9 +382,6 @@ $("#cmbItemId").click(function () {
         }
     });
 });
-
-
-
 
 //END ORDER KEY FUNCTION
 

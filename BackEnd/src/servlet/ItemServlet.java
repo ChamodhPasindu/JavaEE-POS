@@ -2,13 +2,11 @@ package servlet;
 
 import bo.BOFactory;
 import bo.custom.ItemBO;
-import dao.custom.ItemDAO;
-import dto.CustomerDTO;
 import dto.ItemDTO;
+import util.Builder;
 
 import javax.annotation.Resource;
 import javax.json.*;
-import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -22,201 +20,171 @@ import java.util.ArrayList;
 @WebServlet(urlPatterns = "/item")
 public class ItemServlet extends HttpServlet {
 
-    ItemBO itemBO=(ItemBO) BOFactory.getBoFactory().getBO(BOFactory.BOTypes.ITEM);
-
     @Resource(name = "java:comp/env/jdbc/pool")
     DataSource ds;
 
+    ItemBO itemBO = (ItemBO) BOFactory.getBoFactory().getBO(BOFactory.BOTypes.ITEM);
+
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json");
+        PrintWriter writer = resp.getWriter();
+
         try {
+            String option = req.getParameter("option");
             Connection connection = ds.getConnection();
-            String option=req.getParameter("option");
-            PrintWriter writer=resp.getWriter();
-            resp.setContentType("application/json");
 
 
-            switch (option){
+            switch (option) {
                 case "SEARCH":
 
-                    String itemId=req.getParameter("itemId");
-                    JsonArrayBuilder arrayBuilderSearch = Json.createArrayBuilder();
+                    String itemId = req.getParameter("itemId");
                     ItemDTO itemDTO = itemBO.searchItem(connection, itemId);
 
-                    if (itemDTO!=null) {
-                        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                        objectBuilder.add("id", itemDTO.getId());
-                        objectBuilder.add("name", itemDTO.getName());
-                        objectBuilder.add("price", itemDTO.getPrice());
-                        objectBuilder.add("qty", itemDTO.getQty());
-                        arrayBuilderSearch.add(objectBuilder.build());
+                    JsonArrayBuilder arrayBuilderSearch = Json.createArrayBuilder();
 
-                        JsonObjectBuilder response = Json.createObjectBuilder();
-                        response.add("status", 200);
-                        response.add("message", "Done");
-                        response.add("data", arrayBuilderSearch.build());
-                        writer.print(response.build());
-                    }else {
-                        JsonObjectBuilder response = Json.createObjectBuilder();
-                        response.add("status", 400);
-                        response.add("message", "Error");
-                        response.add("data", arrayBuilderSearch.build());
-                        writer.print(response.build());
+                    if (itemDTO != null) {
+
+                        JsonObjectBuilder searchItem = Json.createObjectBuilder()
+                                .add("id", itemDTO.getId())
+                                .add("name", itemDTO.getName())
+                                .add("price", itemDTO.getPrice())
+                                .add("qty", itemDTO.getQty());
+                        arrayBuilderSearch.add(searchItem);
+
+                        Builder.getResponseBuilder(200, "Done", arrayBuilderSearch, writer);
+                    } else {
+                        Builder.getResponseBuilder(400, "Wrong ID inserted", arrayBuilderSearch, writer);
                     }
-
 
                     break;
 
                 case "GET_ALL_DETAILS":
+
                     ArrayList<ItemDTO> itemDetails = itemBO.getAllItemDetails(connection);
                     JsonArrayBuilder arrayBuilderGetAll = Json.createArrayBuilder();
-                    for (ItemDTO dto:itemDetails) {
-                        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                        objectBuilder.add("id", dto.getId());
-                        objectBuilder.add("name", dto.getName());
-                        objectBuilder.add("price", dto.getPrice());
-                        objectBuilder.add("qty", dto.getQty());
-                        arrayBuilderGetAll.add(objectBuilder.build());
+
+                    for (ItemDTO dto : itemDetails) {
+                        JsonObjectBuilder allItemsDetails = Json.createObjectBuilder()
+                                .add("id", dto.getId())
+                                .add("name", dto.getName())
+                                .add("price", dto.getPrice())
+                                .add("qty", dto.getQty());
+                        arrayBuilderGetAll.add(allItemsDetails);
                     }
-                    JsonObjectBuilder response = Json.createObjectBuilder();
-                    response.add("status", 200);
-                    response.add("message", "Done");
-                    response.add("data", arrayBuilderGetAll.build());
-                    writer.print(response.build());
+
+                    Builder.getResponseBuilder(200, "Done", arrayBuilderGetAll, writer);
                     break;
 
                 case "GET_ALL_ID":
 
                     ArrayList<String> allItemIds = itemBO.getAllItemIds(connection);
                     JsonArrayBuilder arrayBuilderGetId = Json.createArrayBuilder();
-                    for (String id :allItemIds) {
-                        JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                        objectBuilder.add("id", id);
-                        arrayBuilderGetId.add(objectBuilder.build());
+
+                    for (String id : allItemIds) {
+                        JsonObjectBuilder allIds = Json.createObjectBuilder()
+                                .add("id", id);
+                        arrayBuilderGetId.add(allIds);
                     }
-                    JsonObjectBuilder response1 = Json.createObjectBuilder();
-                    response1.add("status", 200);
-                    response1.add("message", "Done");
-                    response1.add("data", arrayBuilderGetId.build());
-                    writer.print(response1.build());
+
+                    Builder.getResponseBuilder(200, "Done", arrayBuilderGetId, writer);
                     break;
 
                 case "COUNT":
 
                     String count = itemBO.getItemCount(connection);
-
-                    JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
                     JsonArrayBuilder arrayBuilderCount = Json.createArrayBuilder();
-                    objectBuilder.add("count", count);
-                    arrayBuilderCount.add(objectBuilder.build());
 
-                    JsonObjectBuilder response2 = Json.createObjectBuilder();
-                    response2.add("status", 200);
-                    response2.add("message", "Done");
-                    response2.add("data", arrayBuilderCount.build());
-                    writer.print(response2.build());
+                    JsonObjectBuilder itemCount = Json.createObjectBuilder()
+                            .add("count", count);
+                    arrayBuilderCount.add(itemCount);
+
+                    Builder.getResponseBuilder(200, "Done", arrayBuilderCount, writer);
                     break;
-
-
             }
             connection.close();
 
         } catch (SQLException | ClassNotFoundException e) {
+            Builder.getResponseBuilder(500, e.getLocalizedMessage(), null, writer);
             e.printStackTrace();
         }
 
     }
 
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        PrintWriter writer = resp.getWriter();
+        resp.setContentType("application/json");
+
         JsonReader reader = Json.createReader(req.getReader());
         JsonObject jsonObject = reader.readObject();
         String itemId = jsonObject.getString("id");
         String itemName = jsonObject.getString("name");
         String itemPrice = jsonObject.getString("price");
         String itemQty = jsonObject.getString("qty");
-        PrintWriter writer = resp.getWriter();
-        resp.setContentType("application/json");
 
-        ItemDTO itemDTO = new ItemDTO(itemId,itemName,Double.parseDouble(itemPrice),Integer.parseInt(itemQty));
+        ItemDTO itemDTO = new ItemDTO(itemId, itemName, Double.parseDouble(itemPrice), Integer.parseInt(itemQty));
 
         try {
             Connection connection = ds.getConnection();
-            if (itemBO.updateItem(connection,itemDTO)) {
-                JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                objectBuilder.add("status", 200);
-                objectBuilder.add("message", "Successfully Updated");
-                objectBuilder.add("data", "");
-                writer.print(objectBuilder.build());
-            }else {
-                JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-                objectBuilder.add("status", 400);
-                objectBuilder.add("message", "Update Failed");
-                objectBuilder.add("data", "");
-                writer.print(objectBuilder.build());
-            }
-
-            connection.close();
-        } catch (SQLException | ClassNotFoundException throwables) {
-            JsonObjectBuilder objectBuilder = Json.createObjectBuilder();
-            objectBuilder.add("status", 500);
-            objectBuilder.add("message", "Update Failed");
-            objectBuilder.add("data", throwables.getLocalizedMessage());
-            writer.print(objectBuilder.build());
-        }
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String id=req.getParameter("itemId");
-        String name=req.getParameter("itemName");
-        String price=req.getParameter("itemPrice");
-        String qty=req.getParameter("itemQty");
-
-        PrintWriter writer=resp.getWriter();
-        resp.setContentType("application/json");
-
-        ItemDTO itemDTO = new ItemDTO(id,name,Double.parseDouble(price),Integer.parseInt(qty));
-
-        try {
-            Connection connection = ds.getConnection();
-            if (itemBO.addItem(itemDTO,connection)) {
-                JsonObjectBuilder response= Json.createObjectBuilder();
-                resp.setStatus(HttpServletResponse.SC_CREATED);
-                response.add("status",200);
-                response.add("message","Successfully Added");
-                response.add("data","");
-                writer.print(response.build());
+            if (itemBO.updateItem(connection, itemDTO)) {
+                Builder.getResponseBuilder(200, "Successfully Updated", null, writer);
+            } else {
+                Builder.getResponseBuilder(400, "Update Failed", null, writer);
             }
             connection.close();
 
         } catch (SQLException | ClassNotFoundException e) {
-            JsonObjectBuilder response=Json.createObjectBuilder();
-            response.add("status",400);
-            response.add("message","Error");
-            response.add("data",e.getLocalizedMessage());
-            writer.print(response.build());
+            Builder.getResponseBuilder(500, e.getLocalizedMessage(), null, writer);
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        PrintWriter writer = resp.getWriter();
+        resp.setContentType("application/json");
+
+        String id = req.getParameter("itemId");
+        String name = req.getParameter("itemName");
+        String price = req.getParameter("itemPrice");
+        String qty = req.getParameter("itemQty");
+
+        ItemDTO itemDTO = new ItemDTO(id, name, Double.parseDouble(price), Integer.parseInt(qty));
+
+        try {
+            Connection connection = ds.getConnection();
+            if (itemBO.addItem(itemDTO, connection)) {
+                Builder.getResponseBuilder(200, "Successfully Added", null, writer);
+            } else {
+                Builder.getResponseBuilder(400, "Item Added Failed", null, writer);
+            }
+            connection.close();
+
+        } catch (SQLException | ClassNotFoundException e) {
+            Builder.getResponseBuilder(500, e.getLocalizedMessage(), null, writer);
             resp.setStatus(HttpServletResponse.SC_CREATED);
             e.printStackTrace();
         }
     }
 
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String itemId=req.getParameter("itemId");
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        PrintWriter writer = resp.getWriter();
+        resp.setContentType("application/json");
+
+        String itemId = req.getParameter("itemId");
 
         try {
             Connection connection = ds.getConnection();
-            PrintWriter writer=resp.getWriter();
-
-            if (itemBO.deleteItem(connection,itemId)) {
-                writer.write("Item Deleted");
+            if (itemBO.deleteItem(connection, itemId)) {
+                Builder.getResponseBuilder(200, "Item Deleted Successfully", null, writer);
+            } else {
+                Builder.getResponseBuilder(200, "Item Deleted Fail", null, writer);
             }
-
             connection.close();
 
         } catch (SQLException | ClassNotFoundException e) {
-            resp.sendError(500, e.getMessage());
+            Builder.getResponseBuilder(500, e.getLocalizedMessage(), null, writer);
             e.printStackTrace();
         }
     }

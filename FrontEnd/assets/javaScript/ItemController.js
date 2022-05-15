@@ -201,6 +201,7 @@ $("#btnItemDelete").click(function () {
     let res = confirm("Do you really need to delete this Item ?");
     if (res) {
         deleteItem();
+        clearAllItemDetails();
     }
 });
 //END ITEM BTN FUNCTIONS
@@ -220,7 +221,7 @@ function saveItem() {
                 loadAllItemIds();
                 getItemCount();
             } else {
-                alert(res.data);
+                alert(res.message);
             }
         },
         error: function (ob, textStatus, error) {
@@ -274,11 +275,11 @@ function searchItem() {
                     $("#itemPrice").val(item.price.toFixed(2));
                     $("#itemQtyOnHand").val(item.qty);
                 }
-
                 $('#itemName,#itemPrice,#itemQtyOnHand').prop('disabled', false);
                 $("#btnItemDelete").prop('disabled', false);
             } else {
-                alert("Wrong ID inserted");
+                alert(res.message);
+                clearAllItemDetails();
             }
         },
         error: function (ob, textStatus, error) {
@@ -306,17 +307,14 @@ function updateItem() {
                 alert(res.message);
                 loadAllItem();
                 clearAllItemDetails();
-            } else if (res.status == 400) {
-                alert(res.message);
             } else {
-                alert(res.data);
+                alert(res.message);
             }
         },
         error: function (ob, errorStus) {
             console.log(ob);
         }
     });
-
 }
 
 function deleteItem() {
@@ -326,12 +324,14 @@ function deleteItem() {
         url: "http://localhost:8080/artifact07/item?itemId=" + itemId,
         method: "DELETE",
         success: function (res) {
-            alert(res);
+            alert(res.message);
             loadAllItem();
             getItemCount()
+        },
+        error: function (ob, errorStus) {
+            console.log(ob);
         }
     });
-    clearAllItemDetails();
 
 }
 

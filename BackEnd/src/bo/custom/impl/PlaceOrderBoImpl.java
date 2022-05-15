@@ -11,10 +11,8 @@ import dto.OrderDTO;
 import dto.OrderDetailDTO;
 import entity.Order;
 import entity.OrderDetail;
-import javafx.collections.ObservableList;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 

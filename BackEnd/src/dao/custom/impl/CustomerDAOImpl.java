@@ -2,11 +2,8 @@ package dao.custom.impl;
 
 import dao.CrudUtil;
 import dao.custom.CustomerDAO;
-import db.DbConnection;
 import entity.Customer;
 
-import javax.annotation.Resource;
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;

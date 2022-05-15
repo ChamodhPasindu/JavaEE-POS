@@ -197,6 +197,7 @@ $("#btnCustomerDelete").click(function () {
     let res = confirm("Do you really need to delete this customer ?");
     if (res) {
         deleteCustomer();
+        clearAll();
     }
 });
 
@@ -223,7 +224,7 @@ function saveCustomer() {
                 loadAllCustomerIds();
                 getCustomerCount();
             } else {
-                alert(res.data);
+                alert(res.message);
             }
         },
         error: function (ob, textStatus, error) {
@@ -241,12 +242,14 @@ function deleteCustomer() {
         url: "http://localhost:8080/artifact07/customer?CusId=" + customerId,
         method: "DELETE",
         success: function (res) {
-            alert(res);
+            alert(res.message);
             loadAllCustomer();
             getCustomerCount();
+        },
+        error: function (ob, errorStus) {
+            console.log(ob);
         }
     });
-    clearAll();
 }
 
 function updateCustomer() {
@@ -265,10 +268,8 @@ function updateCustomer() {
             if (res.status == 200) {
                 alert(res.message);
                 loadAllCustomer();
-            } else if (res.status == 400) {
-                alert(res.message);
             } else {
-                alert(res.data);
+                alert(res.message);
             }
         },
         error: function (ob, errorStus) {
@@ -292,11 +293,11 @@ function searchCustomer() {
                     $("#customerSalary").val(customer.salary.toFixed(2));
                     $("#customerAddress").val(customer.address);
                 }
-
                 $('#customerName,#customerSalary,#customerAddress').prop('disabled', false);
                 $("#btnCustomerDelete").prop('disabled', false);
             } else {
-                alert("Wrong ID inserted");
+                alert(res.message);
+                clearAll();
             }
         },
         error: function (ob, textStatus, error) {
